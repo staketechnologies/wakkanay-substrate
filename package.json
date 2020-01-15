@@ -25,6 +25,8 @@
   },
   "homepage": "https://github.com/staketechnologies/wakkanay-substrate#readme",
   "dependencies": {
+    "@polkadot/api": "^0.100.1",
+    "@polkadot/keyring": "^1.8.1",
     "wakkanay": "github:cryptoeconomicslab/wakkanay"
   },
   "devDependencies": {
