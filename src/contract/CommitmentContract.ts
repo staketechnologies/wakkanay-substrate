@@ -19,6 +19,7 @@ export class CommitmentContract implements ICommitmentContract {
     readonly operatorKeyPair: KeyringPair
   ) {
     this.registry = new TypeRegistry()
+    // confirm that this.address.data is hex string
     this.contractId = new AccountId(this.registry, this.address.data)
   }
 
@@ -35,7 +36,6 @@ export class CommitmentContract implements ICommitmentContract {
   }
 
   async getCurrentBlock(): Promise<BigNumber> {
-    // confirm that this.address.data is hex string
     const blockNumber = await this.api.query.commitment.getCurrentBlock(
       this.contractId
     )
