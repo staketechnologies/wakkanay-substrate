@@ -11,40 +11,40 @@ import KeyValueStore = db.KeyValueStore
 
 export class CommitmentContract implements ICommitmentContract {
   registry: TypeRegistry
-  accountId: AccountId
+  contractId: AccountId
   constructor(
     readonly address: Address,
     eventDb: KeyValueStore,
     readonly api: ApiPromise,
-    readonly keyPair: KeyringPair
+    readonly operatorKeyPair: KeyringPair
   ) {
     this.registry = new TypeRegistry()
-    this.accountId = new AccountId(this.registry, this.address.data)
+    this.contractId = new AccountId(this.registry, this.address.data)
   }
 
   async submit(blockNumber: BigNumber, root: Bytes) {
     await this.api.tx.commitment
       .submitRoot(
-        this.accountId,
+        this.contractId,
         blockNumber.raw,
         root.toHexString()
         // new U256(this.registry, blockNumber.raw),
         // new H256(this.registry, root.toHexString())
       )
-      .signAndSend(this.keyPair, {})
+      .signAndSend(this.operatorKeyPair, {})
   }
 
   async getCurrentBlock(): Promise<BigNumber> {
     // confirm that this.address.data is hex string
     const blockNumber = await this.api.query.commitment.getCurrentBlock(
-      this.accountId
+      this.contractId
     )
     return BigNumber.fromHexString(blockNumber.toHex())
   }
 
   async getRoot(blockNumber: BigNumber): Promise<Bytes> {
     const root = await this.api.query.commitment.getRoot(
-      this.accountId,
+      this.contractId,
       Bytes.fromHexString(blockNumber.toHexString()).data
     )
     return Bytes.fromHexString(root.toHex())
