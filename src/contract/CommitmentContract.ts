@@ -26,10 +26,12 @@ export class CommitmentContract implements ICommitmentContract {
     await this.api.tx.commitment
       .submitRoot(
         this.accountId,
-        new U256(this.registry, blockNumber.raw),
-        new H256(this.registry, root.toHexString())
+        blockNumber.raw,
+        root.toHexString()
+        // new U256(this.registry, blockNumber.raw),
+        // new H256(this.registry, root.toHexString())
       )
-      .signAndSend(this.keyPair, 1)
+      .signAndSend(this.keyPair, {})
   }
 
   async getCurrentBlock(): Promise<BigNumber> {
