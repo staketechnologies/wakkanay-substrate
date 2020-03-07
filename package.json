@@ -30,6 +30,7 @@
     "@cryptoeconomicslab/contract": "0.0.35",
     "@cryptoeconomicslab/db": "0.0.35",
     "@cryptoeconomicslab/ovm": "0.0.35",
+    "@cryptoeconomicslab/primitives": "0.0.35",
     "jsbi": "^3.1.2"
   },
   "devDependencies": {
@@ -37,7 +38,6 @@
     "@types/node": "^12.12.16",
     "@typescript-eslint/eslint-plugin": "^2.5.0",
     "@typescript-eslint/parser": "^2.5.0",
-    "@cryptoeconomicslab/primitives": "0.0.35",
     "eslint": "^6.6.0",
     "eslint-config-prettier": "^6.5.0",
     "eslint-plugin-prettier": "^3.1.1",
@@ -48,7 +48,7 @@
     "typescript": "^3.6.4"
   },
   "peerDependencies": {
-    "@cryptoeconomicslab/primitives": "^0.0.5"
+    "@cryptoeconomicslab/primitives": "^0.0.35"
   },
   "jest": {
     "transform": {
