@@ -1,13 +1,10 @@
-import { contract, db, types } from 'wakkanay'
 import { ApiPromise } from '@polkadot/api'
 import { KeyringPair } from '@polkadot/keyring/types'
 import AccountId from '@polkadot/types/primitive/Generic/AccountId'
 import { TypeRegistry, U256, H256 } from '@polkadot/types'
-import Address = types.Address
-import BigNumber = types.BigNumber
-import Bytes = types.Bytes
-import ICommitmentContract = contract.ICommitmentContract
-import KeyValueStore = db.KeyValueStore
+import { ICommitmentContract } from '@cryptoeconomicslab/contract'
+import { Address, BigNumber, Bytes } from '@cryptoeconomicslab/primitives'
+import { KeyValueStore } from '@cryptoeconomicslab/db'
 
 export class CommitmentContract implements ICommitmentContract {
   registry: TypeRegistry
