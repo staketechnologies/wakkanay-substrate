@@ -11,6 +11,7 @@ import {
 } from '@cryptoeconomicslab/primitives'
 import * as types from '@polkadot/types'
 import TypeRegistry = types.TypeRegistry
+import { Compact } from '@polkadot/types/codec'
 
 /**
  * mapping between @cryptoeconomicslab/primitives and polcadot-js
@@ -23,6 +24,29 @@ import TypeRegistry = types.TypeRegistry
  * Struct<{[key: string]: T}> -> Tuple<T[]>
  */
 type TypeString = 'Address' | 'U256' | 'Raw'
+
+/**
+ * https://substrate.dev/docs/en/conceptual/core/codec#tuples-and-structures
+ */
+class PolcadotTuple {
+  constructor(readonly items: Codable[]) {}
+  toU8a(): Uint8Array {
+    return Bytes.concat(this.items.map(i => PolcadotCoder.encode(i))).data
+  }
+}
+
+/**
+ * https://substrate.dev/docs/en/conceptual/core/codec#vectors-lists-series-sets
+ */
+class PolcadotVec {
+  constructor(readonly items: Codable[]) {}
+  toU8a(): Uint8Array {
+    const bytesItems = [
+      Bytes.from(Compact.encodeU8a(this.items.length))
+    ].concat(this.items.map(i => PolcadotCoder.encode(i)))
+    return Bytes.concat(bytesItems).data
+  }
+}
 
 export function getTupleType(t: Tuple | Struct): TypeString[] {
   if (t instanceof Tuple) {
@@ -54,20 +78,19 @@ export function getTypeString(v: Codable): TypeString {
 }
 
 function innerEncode(registry: TypeRegistry, input: Codable) {
+  const c = input.constructor.name
   if (input instanceof Bytes) {
     return new types.Raw(registry, input.raw)
+  } else if (input instanceof Integer) {
+    return new types.UInt(registry, input.raw)
   } else if (input instanceof BigNumber) {
     return new types.UInt(registry, input.raw)
   } else if (input instanceof List) {
-    return new types.Vec(
-      registry,
-      getTypeString(input.getC().default()),
-      input.raw
-    )
+    return new PolcadotVec(input.data)
   } else if (input instanceof Tuple) {
-    return new types.Tuple(registry, getTupleType(input), input.raw)
+    return new PolcadotTuple(input.data)
   } else if (input instanceof Struct) {
-    return new types.Tuple(registry, getTupleType(input), input.raw)
+    return new PolcadotTuple(input.data.map(d => d.value))
   }
   throw new Error(
     `Invalid type to encode for Polcadot Abi coder: ${input.toString()}`
