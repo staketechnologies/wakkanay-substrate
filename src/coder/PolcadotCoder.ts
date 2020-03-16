@@ -80,11 +80,15 @@ export function getTypeString(v: Codable): TypeString {
 function innerEncode(registry: TypeRegistry, input: Codable) {
   const c = input.constructor.name
   if (input instanceof Bytes) {
-    return new types.Raw(registry, input.raw)
+    return new types.Vec(
+      registry,
+      'u8',
+      Array.from(input.data).map(d => d.toString())
+    )
   } else if (input instanceof Integer) {
-    return new types.UInt(registry, input.raw)
+    return new types.U256(registry, input.raw)
   } else if (input instanceof BigNumber) {
-    return new types.UInt(registry, input.raw)
+    return new types.U256(registry, input.raw)
   } else if (input instanceof List) {
     return new PolcadotVec(input.data)
   } else if (input instanceof Tuple) {
