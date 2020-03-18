@@ -5,7 +5,8 @@ import {
   List,
   Tuple,
   Address,
-  Struct
+  Struct,
+  Integer
 } from '@cryptoeconomicslab/primitives'
 
 describe('PolcadotCoder', () => {
@@ -104,6 +105,15 @@ describe('PolcadotCoder', () => {
       )
       expect(decoded.toHexString()).toEqual('0x0012345678')
     })
+    test('decode Integer', () => {
+      const decoded = PolcadotCoder.decode(
+        Integer.default(),
+        Bytes.fromHexString(
+          '0x6400000000000000000000000000000000000000000000000000000000000000'
+        )
+      )
+      expect(decoded.data).toEqual(100)
+    })
     test('decode BigNumber', () => {
       const decoded = PolcadotCoder.decode(
         BigNumber.default(),
@@ -131,6 +141,46 @@ describe('PolcadotCoder', () => {
       expect(decoded.data).toEqual([
         BigNumber.from(100),
         Bytes.fromHexString('0x0012345678')
+      ])
+    })
+    test('decode List of Tuple', () => {
+      const factory = {
+        default: () => Tuple.from([BigNumber.default(), Bytes.default()])
+      }
+      const decoded = PolcadotCoder.decode(
+        List.default(
+          factory,
+          Tuple.from([BigNumber.default(), Bytes.default()])
+        ),
+        Bytes.fromHexString(
+          '0x08640000000000000000000000000000000000000000000000000000000000000018001234567801c80000000000000000000000000000000000000000000000000000000000000018001234567802'
+        )
+      )
+      expect(decoded.data).toEqual([
+        Tuple.from([
+          BigNumber.from(100),
+          Bytes.fromHexString('0x001234567801')
+        ]),
+        Tuple.from([BigNumber.from(200), Bytes.fromHexString('0x001234567802')])
+      ])
+    })
+    test('decode Tuple of Tuple', () => {
+      const t = Tuple.from([
+        Tuple.from([BigNumber.default(), Bytes.default()]),
+        Tuple.from([Bytes.default(), Bytes.default()])
+      ])
+      const decoded = PolcadotCoder.decode(
+        t,
+        Bytes.fromHexString(
+          '0x64000000000000000000000000000000000000000000000000000000000000001400123456780c0000010c000002'
+        )
+      )
+      expect(decoded.data).toEqual([
+        Tuple.from([BigNumber.from(100), Bytes.fromHexString('0x0012345678')]),
+        Tuple.from([
+          Bytes.fromHexString('0x000001'),
+          Bytes.fromHexString('0x000002')
+        ])
       ])
     })
     test('decode Struct', () => {
