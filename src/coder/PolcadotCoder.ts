@@ -11,75 +11,63 @@ import {
 } from '@cryptoeconomicslab/primitives'
 import * as types from '@polkadot/types'
 import TypeRegistry = types.TypeRegistry
-import { Compact } from '@polkadot/types/codec'
+import { Constructor, Codec } from '@polkadot/types/types'
 
 /**
  * mapping between @cryptoeconomicslab/primitives and polcadot-js
- * Address -> Address
- * Bytes -> Raw
+ * Address -> AccountId
+ * Bytes -> Vec<u8>
  * Integer -> U256
  * BigNumber -> U256
  * List<T> -> Vec<T>
  * Tuple<T[]> -> Tuple<T[]>
  * Struct<{[key: string]: T}> -> Tuple<T[]>
  */
-type TypeString = 'Address' | 'U256' | 'Raw'
+type TypeString = 'AccountId' | 'U256' | 'Vec<u8>'
 
-/**
- * https://substrate.dev/docs/en/conceptual/core/codec#tuples-and-structures
- */
-class PolcadotTuple {
-  constructor(readonly items: Codable[]) {}
-  toU8a(): Uint8Array {
-    return Bytes.concat(this.items.map(i => PolcadotCoder.encode(i))).data
-  }
+export function getVecType<T extends Codable>(l: List<T>): any {
+  return getTypeString(l.getC().default())
 }
 
-/**
- * https://substrate.dev/docs/en/conceptual/core/codec#vectors-lists-series-sets
- */
-class PolcadotVec {
-  constructor(readonly items: Codable[]) {}
-  toU8a(): Uint8Array {
-    const bytesItems = [
-      Bytes.from(Compact.encodeU8a(this.items.length))
-    ].concat(this.items.map(i => PolcadotCoder.encode(i)))
-    return Bytes.concat(bytesItems).data
-  }
-}
-
-export function getTupleType(t: Tuple | Struct): TypeString[] {
+export function getTupleType(t: Tuple | Struct) {
   if (t instanceof Tuple) {
-    return t.data.map((r, index) => getTypeString(r))
+    return t.data.map(r => getTypeString(r))
   } else if (t instanceof Struct) {
-    return t.data.map((r, index) => getTypeString(r.value))
+    return t.data.map(r => getTypeString(r.value))
   } else {
     throw new Error('Invalid type to get tuple type')
   }
 }
 
-export function getTypeString(v: Codable): TypeString {
+export function getTypeString(
+  v: Codable
+): TypeString | Constructor<types.Tuple> | Constructor<types.Vec<Codec>> {
   if (v instanceof Address) {
-    return 'Address'
+    return 'AccountId'
   } else if (v instanceof Bytes) {
-    return 'Raw'
+    return types.Vec.with('u8')
   } else if (v instanceof Integer || v instanceof BigNumber) {
     return 'U256'
   } else if (v instanceof List) {
-    throw new Error("getTypeString doesn't support List")
+    return types.Vec.with(getVecType(v))
   } else if (v instanceof Tuple) {
-    throw new Error("getTypeString doesn't support Tuple")
+    return types.Tuple.with(getTupleType(v))
   } else if (v instanceof Struct) {
-    throw new Error("getTypeString doesn't support Struct")
+    return types.Tuple.with(getTupleType(v))
   }
   throw new Error(
     `Invalid type to get type string for Polcadot Abi coder: ${v.toString()}`
   )
 }
 
-function innerEncode(registry: TypeRegistry, input: Codable) {
-  const c = input.constructor.name
-  if (input instanceof Bytes) {
+interface A {
+  toU8a(): Uint8Array
+}
+
+function innerEncode(registry: TypeRegistry, input: Codable): A {
+  if (input instanceof Address) {
+    throw new Error(`Address doesn't support yet`)
+  } else if (input instanceof Bytes) {
     return new types.Vec(
       registry,
       'u8',
@@ -90,15 +78,81 @@ function innerEncode(registry: TypeRegistry, input: Codable) {
   } else if (input instanceof BigNumber) {
     return new types.U256(registry, input.raw)
   } else if (input instanceof List) {
-    return new PolcadotVec(input.data)
+    return new types.Vec(
+      registry,
+      getVecType(input),
+      input.data.map(d => innerEncode(registry, d))
+    )
   } else if (input instanceof Tuple) {
-    return new PolcadotTuple(input.data)
+    return new types.Tuple(
+      registry,
+      getTupleType(input),
+      input.data.map(d => innerEncode(registry, d))
+    )
   } else if (input instanceof Struct) {
-    return new PolcadotTuple(input.data.map(d => d.value))
+    return new types.Tuple(
+      registry,
+      getTupleType(input),
+      input.data.map(d => innerEncode(registry, d.value))
+    )
   }
   throw new Error(
     `Invalid type to encode for Polcadot Abi coder: ${input.toString()}`
   )
+}
+
+function decodeInner(
+  registry: TypeRegistry,
+  definition: Codable,
+  data: any
+): Codable {
+  if (definition instanceof Address) {
+    throw new Error(`Address doesn't support yet`)
+  } else if (definition instanceof Bytes) {
+    const arr = data as types.Vec<types.u8>
+    return Bytes.from(
+      Uint8Array.from(
+        arr.map(c => {
+          return c.toU8a()[0]
+        })
+      )
+    )
+  } else if (definition instanceof Integer) {
+    return Integer.from(Number(data))
+  } else if (definition instanceof BigNumber) {
+    return BigNumber.fromString(data)
+  } else if (definition instanceof List) {
+    const arr = data as any[]
+    return List.from(
+      definition.getC().default(),
+      arr.map(c => decodeInner(registry, definition.getC().default(), c))
+    )
+  } else if (definition instanceof Tuple) {
+    const tuple = data as types.Tuple
+    return Tuple.from(
+      tuple.map((c, index) => {
+        return decodeInner(registry, definition.data[index], c)
+      })
+    )
+  } else {
+    throw new Error('method not implemented')
+  }
+}
+
+function innerDecode(registry: TypeRegistry, definition: Codable, data: Bytes) {
+  if (definition instanceof Address) {
+    throw new Error(`Address doesn't support yet`)
+  } else if (definition instanceof Bytes) {
+    return types.Vec.decodeVec(registry, types.u8, data.data)
+  } else if (definition instanceof Integer || definition instanceof BigNumber) {
+    return types.U256.decodeAbstracInt(data.data, 256, false)
+  } else if (definition instanceof List) {
+    return types.Vec.decodeVec(registry, getVecType(definition), data.data)
+  } else if (definition instanceof Tuple) {
+    return new types.Tuple(registry, getTupleType(definition), data.data)
+  } else {
+    throw new Error('method not implemented')
+  }
 }
 
 // Polcadot coder object
@@ -117,7 +171,8 @@ export const PolcadotCoder: Coder = {
    * @param data hex string to decode
    */
   decode<T extends Codable>(d: T, data: Bytes): T {
-    throw new Error('method not implemented')
+    const registry = new TypeRegistry()
+    return decodeInner(registry, d, innerDecode(registry, d, data)) as T
   }
 }
 
