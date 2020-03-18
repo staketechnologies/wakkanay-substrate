@@ -4,7 +4,8 @@ import {
   Bytes,
   List,
   Tuple,
-  Address
+  Address,
+  Struct
 } from '@cryptoeconomicslab/primitives'
 
 describe('PolcadotCoder', () => {
@@ -75,6 +76,24 @@ describe('PolcadotCoder', () => {
         '0x64000000000000000000000000000000000000000000000000000000000000001400123456780c0000010c000002'
       )
     })
+
+    test('encode Struct', () => {
+      const encoded = PolcadotCoder.encode(
+        Struct.from([
+          {
+            key: 'num',
+            value: BigNumber.from(100)
+          },
+          {
+            key: 'bytes',
+            value: Bytes.fromHexString('0x0012345678')
+          }
+        ])
+      )
+      expect(encoded.toHexString()).toBe(
+        '0x6400000000000000000000000000000000000000000000000000000000000000140012345678'
+      )
+    })
   })
 
   describe('decode', () => {
@@ -112,6 +131,22 @@ describe('PolcadotCoder', () => {
       expect(decoded.data).toEqual([
         BigNumber.from(100),
         Bytes.fromHexString('0x0012345678')
+      ])
+    })
+    test('decode Struct', () => {
+      const t = Struct.from([
+        { key: 'num', value: BigNumber.default() },
+        { key: 'bytes', value: Bytes.default() }
+      ])
+      const decoded = PolcadotCoder.decode(
+        t,
+        Bytes.fromHexString(
+          '0x6400000000000000000000000000000000000000000000000000000000000000140012345678'
+        )
+      )
+      expect(decoded.data).toEqual([
+        { key: 'num', value: BigNumber.from(100) },
+        { key: 'bytes', value: Bytes.fromHexString('0x0012345678') }
       ])
     })
   })

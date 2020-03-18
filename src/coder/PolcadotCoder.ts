@@ -134,6 +134,16 @@ function decodeInner(
         return decodeInner(registry, definition.data[index], c)
       })
     )
+  } else if (definition instanceof Struct) {
+    const tuple = data as types.Tuple
+    return Struct.from(
+      tuple.map((c, index) => {
+        return {
+          key: definition.data[index].key,
+          value: decodeInner(registry, definition.data[index].value, c)
+        }
+      })
+    )
   } else {
     throw new Error('method not implemented')
   }
@@ -149,6 +159,8 @@ function innerDecode(registry: TypeRegistry, definition: Codable, data: Bytes) {
   } else if (definition instanceof List) {
     return types.Vec.decodeVec(registry, getVecType(definition), data.data)
   } else if (definition instanceof Tuple) {
+    return new types.Tuple(registry, getTupleType(definition), data.data)
+  } else if (definition instanceof Struct) {
     return new types.Tuple(registry, getTupleType(definition), data.data)
   } else {
     throw new Error('method not implemented')
