@@ -13,9 +13,7 @@ describe('PolcadotCoder', () => {
   describe('encode', () => {
     test('encode BigNumber', () => {
       const encoded = PolcadotCoder.encode(BigNumber.from(100))
-      expect(encoded.toHexString()).toBe(
-        '0x6400000000000000000000000000000000000000000000000000000000000000'
-      )
+      expect(encoded.toHexString()).toBe('0x64000000000000000000000000000000')
     })
 
     test('encode Bytes', () => {
@@ -35,7 +33,7 @@ describe('PolcadotCoder', () => {
         Tuple.from([BigNumber.from(100), Bytes.fromHexString('0x0012345678')])
       )
       expect(encoded.toHexString()).toBe(
-        '0x6400000000000000000000000000000000000000000000000000000000000000140012345678'
+        '0x64000000000000000000000000000000140012345678'
       )
     })
 
@@ -56,7 +54,7 @@ describe('PolcadotCoder', () => {
         ])
       )
       expect(encoded.toHexString()).toBe(
-        '0x08640000000000000000000000000000000000000000000000000000000000000018001234567801c80000000000000000000000000000000000000000000000000000000000000018001234567802'
+        '0x086400000000000000000000000000000018001234567801c800000000000000000000000000000018001234567802'
       )
     })
 
@@ -74,7 +72,7 @@ describe('PolcadotCoder', () => {
         ])
       )
       expect(encoded.toHexString()).toBe(
-        '0x64000000000000000000000000000000000000000000000000000000000000001400123456780c0000010c000002'
+        '0x640000000000000000000000000000001400123456780c0000010c000002'
       )
     })
 
@@ -92,7 +90,7 @@ describe('PolcadotCoder', () => {
         ])
       )
       expect(encoded.toHexString()).toBe(
-        '0x6400000000000000000000000000000000000000000000000000000000000000140012345678'
+        '0x64000000000000000000000000000000140012345678'
       )
     })
   })
@@ -117,9 +115,7 @@ describe('PolcadotCoder', () => {
     test('decode BigNumber', () => {
       const decoded = PolcadotCoder.decode(
         BigNumber.default(),
-        Bytes.fromHexString(
-          '0x6400000000000000000000000000000000000000000000000000000000000000'
-        )
+        Bytes.fromHexString('0x64000000000000000000000000000000')
       )
       expect(decoded.raw).toEqual('100')
     })
@@ -134,9 +130,7 @@ describe('PolcadotCoder', () => {
       const t = Tuple.from([BigNumber.default(), Bytes.default()])
       const decoded = PolcadotCoder.decode(
         t,
-        Bytes.fromHexString(
-          '0x6400000000000000000000000000000000000000000000000000000000000000140012345678'
-        )
+        Bytes.fromHexString('0x64000000000000000000000000000000140012345678')
       )
       expect(decoded.data).toEqual([
         BigNumber.from(100),
@@ -153,7 +147,7 @@ describe('PolcadotCoder', () => {
           Tuple.from([BigNumber.default(), Bytes.default()])
         ),
         Bytes.fromHexString(
-          '0x08640000000000000000000000000000000000000000000000000000000000000018001234567801c80000000000000000000000000000000000000000000000000000000000000018001234567802'
+          '0x086400000000000000000000000000000018001234567801c800000000000000000000000000000018001234567802'
         )
       )
       expect(decoded.data).toEqual([
@@ -172,7 +166,7 @@ describe('PolcadotCoder', () => {
       const decoded = PolcadotCoder.decode(
         t,
         Bytes.fromHexString(
-          '0x64000000000000000000000000000000000000000000000000000000000000001400123456780c0000010c000002'
+          '0x640000000000000000000000000000001400123456780c0000010c000002'
         )
       )
       expect(decoded.data).toEqual([
@@ -190,9 +184,7 @@ describe('PolcadotCoder', () => {
       ])
       const decoded = PolcadotCoder.decode(
         t,
-        Bytes.fromHexString(
-          '0x6400000000000000000000000000000000000000000000000000000000000000140012345678'
-        )
+        Bytes.fromHexString('0x64000000000000000000000000000000140012345678')
       )
       expect(decoded.data).toEqual([
         { key: 'num', value: BigNumber.from(100) },

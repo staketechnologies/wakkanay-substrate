@@ -23,7 +23,7 @@ import { Constructor, Codec } from '@polkadot/types/types'
  * Tuple<T[]> -> Tuple<T[]>
  * Struct<{[key: string]: T}> -> Tuple<T[]>
  */
-type TypeString = 'AccountId' | 'U256' | 'Vec<u8>'
+type TypeString = 'AccountId' | 'u128' | 'Vec<u8>'
 
 export function getVecType<T extends Codable>(l: List<T>): any {
   return getTypeString(l.getC().default())
@@ -47,7 +47,7 @@ export function getTypeString(
   } else if (v instanceof Bytes) {
     return types.Vec.with('u8')
   } else if (v instanceof Integer || v instanceof BigNumber) {
-    return 'U256'
+    return 'u128'
   } else if (v instanceof List) {
     return types.Vec.with(getVecType(v))
   } else if (v instanceof Tuple) {
@@ -74,9 +74,9 @@ function innerEncode(registry: TypeRegistry, input: Codable): A {
       Array.from(input.data).map(d => d.toString())
     )
   } else if (input instanceof Integer) {
-    return new types.U256(registry, input.raw)
+    return new types.u128(registry, input.raw)
   } else if (input instanceof BigNumber) {
-    return new types.U256(registry, input.raw)
+    return new types.u128(registry, input.raw)
   } else if (input instanceof List) {
     return new types.Vec(
       registry,
@@ -155,7 +155,7 @@ function innerDecode(registry: TypeRegistry, definition: Codable, data: Bytes) {
   } else if (definition instanceof Bytes) {
     return types.Vec.decodeVec(registry, types.u8, data.data)
   } else if (definition instanceof Integer || definition instanceof BigNumber) {
-    return types.U256.decodeAbstracInt(data.data, 256, false)
+    return types.u128.decodeAbstracInt(data.data, 256, false)
   } else if (definition instanceof List) {
     return types.Vec.decodeVec(registry, getVecType(definition), data.data)
   } else if (definition instanceof Tuple) {
